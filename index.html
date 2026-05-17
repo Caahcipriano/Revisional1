@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Sistemas Digestivo, Urinário, Sondas e Segurança</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .question-container {
+            display: none;
+            margin-bottom: 30px;
+        }
+        .question-container.active {
+            display: block;
+        }
+        .question-number {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .question-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .option:hover {
+            border-color: #667eea;
+            background-color: #f5f5ff;
+        }
+        .option input[type="radio"] {
+            margin-right: 10px;
+        }
+        .option.correct {
+            border-color: #4caf50;
+            background-color: #e8f5e9;
+        }
+        .option.incorrect {
+            border-color: #f44336;
+            background-color: #ffebee;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            font-size: 14px;
+        }
+        .feedback.show {
+            display: block;
+        }
+        .feedback.correct {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+        .feedback.incorrect {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .btn-next {
+            background-color: #667eea;
+            color: white;
+        }
+        .btn-next:hover {
+            background-color: #5568d3;
+        }
+        .btn-next:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-restart {
+            background-color: #764ba2;
+            color: white;
+        }
+        .btn-restart:hover {
+            background-color: #63408a;
+        }
+        .progress {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #667eea;
+            transition: width 0.3s ease;
+        }
+        .results {
+            display: none;
+            text-align: center;
+        }
+        .results.show {
+            display: block;
+        }
+        .results h2 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .score {
+            font-size: 48px;
+            color: #764ba2;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .score-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .topic-category {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Quiz: Digestivo, Urinário, Sondas, Nervoso e Segurança</h1>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="quizContainer"></div>
+        <div class="results" id="results">
+            <h2>Resultado Final!</h2>
+            <div class="score" id="scoreDisplay">0/0</div>
+            <div class="score-text" id="scoreText"></div>
+            <button class="btn-restart" onclick="location.reload()">Refazer Quiz</button>
+        </div>
+        <div class="buttons" id="buttons">
+            <button class="btn-next" id="nextBtn" onclick="nextQuestion()" disabled>Próxima Questão</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                category: "Sistema Digestivo",
+                question: "Qual é a principal função da boca no processo digestivo?",
+                options: [
+                    "Produzir bile",
+                    "Iniciar a mastigação e misturar o alimento com saliva",
+                    "Absorver nutrientes",
+                    "Filtrar toxinas"
+                ],
+                correct: 1,
+                explanation: "A boca inicia a digestão mecânica e química, formando o bolo alimentar."
+            },
+            {
+                category: "Sistema Digestivo",
+                question: "Qual estrutura transporta o alimento da boca até o estômago?",
+                options: [
+                    "Faringe",
+                    "Intestino delgado",
+                    "Esôfago",
+                    "Bexiga"
+                ],
+                correct: 2,
+                explanation: "O esôfago conduz o alimento ao estômago através de movimentos peristálticos."
+            },
+            {
+                category: "Sistema Digestivo",
+                question: "Qual é a função principal do estômago?",
+                options: [
+                    "Absorver nutrientes",
+                    "Armazenar e digerir proteínas com ácido e enzimas",
+                    "Produzir insulina",
+                    "Regular a pressão arterial"
+                ],
+                correct: 1,
+                explanation: "O estômago armazena o alimento e inicia a digestão proteica com ácido e enzimas."
+            },
+            {
+                category: "Sistema Digestivo",
+                question: "Qual parte do intestino é responsável pela maior absorção de nutrientes?",
+                options: [
+                    "Intestino grosso",
+                    "Intestino delgado",
+                    "Esôfago",
+                    "Útero"
+                ],
+                correct: 1,
+                explanation: "O intestino delgado absorve a maioria dos nutrientes digeridos pelo organismo."
+            },
+            {
+                category: "Sistema Digestivo",
+                question: "Qual é a função principal do intestino grosso?",
+                options: [
+                    "Produzir enzimas digestivas",
+                    "Absorver água e formar fezes",
+                    "Iniciar a digestão de carboidratos",
+                    "Regular a temperatura corporal"
+                ],
+                correct: 1,
+                explanation: "O intestino grosso absorve água e transforma o resíduo em fezes para eliminação."
+            },
+            {
+                category: "Sistema Digestivo",
+                question: "Qual estrutura controla a saída das fezes?",
+                options: [
+                    "Ânus",
+                    "Uretra",
+                    "Pâncreas",
+                    "Esôfago"
+                ],
+                correct: 0,
+                explanation: "O ânus é a abertura final do trato digestivo e regula a eliminação das fezes."
+            },
+            {
+                category: "Sistema Urinário",
+                question: "Qual é a função básica do sistema urinário?",
+                options: [
+                    "Controlar a digestão",
+                    "Produzir urina e eliminar resíduos do sangue",
+                    "Bombear sangue",
+                    "Produzir hormônios"
+                ],
+                correct: 1,
+                explanation: "O sistema urinário remove resíduos do sangue e mantém o equilíbrio de líquidos."
+            },
+            {
+                category: "Sistema Urinário",
+                question: "Qual estrutura transporta a urina do rim para a bexiga?",
+                options: [
+                    "Uretra",
+                    "Ureteres",
+                    "Esôfago",
+                    "Intestino grosso"
+                ],
+                correct: 1,
+                explanation: "Os ureteres levam a urina dos rins até a bexiga."
+            },
+            {
+                category: "Sistema Urinário",
+                question: "Qual é a função da bexiga?",
+                options: [
+                    "Filtrar o sangue",
+                    "Armazenar urina",
+                    "Absorver nutrientes",
+                    "Produzir bile"
+                ],
+                correct: 1,
+                explanation: "A bexiga armazena temporariamente a urina antes de sua eliminação pela uretra."
+            },
+            {
+                category: "Sistema Urinário",
+                question: "O que faz a uretra no sistema urinário?",
+                options: [
+                    "Produz urina",
+                    "Transporta urina para fora do corpo",
+                    "Armazena urina",
+                    "Filtra sangue"
+                ],
+                correct: 1,
+                explanation: "A uretra conduz a urina da bexiga para fora do corpo."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "O que é um cateter em enfermagem?",
+                options: [
+                    "Um medicamento",
+                    "Um tubo usado para drenar ou administrar líquidos",
+                    "Um tipo de seringa",
+                    "Uma sonda nasoentérica"
+                ],
+                correct: 1,
+                explanation: "Um cateter é um tubo flexível usado para drenar fluidos ou administrar substâncias ao corpo."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "Qual é a finalidade de uma sonda?",
+                options: [
+                    "Medir a pressão arterial",
+                    "Permitir drenagem ou alimentação sem via oral",
+                    "Eliminar gases",
+                    "Controlar a temperatura"
+                ],
+                correct: 1,
+                explanation: "Sondas permitem alimentação, drenagem ou administração de medicamentos quando a ingestão oral não é possível."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "O que significa SNG?",
+                options: [
+                    "Sonda nasogástrica",
+                    "Sonda nasoentérica",
+                    "Sonda urinária",
+                    "Sonda intravenosa"
+                ],
+                correct: 0,
+                explanation: "SNG significa sonda nasogástrica, inserida pelo nariz até o estômago."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "O que significa SNE?",
+                options: [
+                    "Sonda nasal externa",
+                    "Sonda nasoentérica",
+                    "Sonda vesical",
+                    "Sonda retal"
+                ],
+                correct: 1,
+                explanation: "SNE é sonda nasoentérica, que vai do nariz até o intestino para alimentação ou drenagem."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "Qual posição é mais segura para um paciente receber alimentação por sonda?",
+                options: [
+                    "Deitado totalmente de costas",
+                    "Semi-Fowler com cabeceira elevada",
+                    "Decúbito ventral",
+                    "Sentado no chão"
+                ],
+                correct: 1,
+                explanation: "A posição semi-Fowler reduz o risco de aspiração durante a alimentação por sonda."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "O que é uma ostomia?",
+                options: [
+                    "Uma abertura cirúrgica para eliminação de fezes ou urina",
+                    "Uma sonda nasogástrica",
+                    "Um tipo de cateter venoso",
+                    "Uma infecção"
+                ],
+                correct: 0,
+                explanation: "Ostomia é uma abertura criada cirurgicamente para saída de fezes ou urina para fora do corpo."
+            },
+            {
+                category: "Cateteres e Sondas",
+                question: "Qual é um tipo comum de ostomia?",
+                options: [
+                    "Colostomia",
+                    "Ureterostomia",
+                    "Gastrostomia",
+                    "Cistostomia"
+                ],
+                correct: 0,
+                explanation: "A colostomia desvia o intestino grosso para uma bolsa externa, permitindo eliminação das fezes."
+            },
+            {
+                category: "Sistema Nervoso",
+                question: "Qual é a função básica do sistema nervoso?",
+                options: [
+                    "Produzir urina",
+                    "Controlar e coordenar ações do corpo",
+                    "Digestionar alimentos",
+                    "Regular a respiração"
+                ],
+                correct: 1,
+                explanation: "O sistema nervoso percebe estímulos e coordena respostas para manter o corpo funcionando."
+            },
+            {
+                category: "Sistema Nervoso",
+                question: "Qual é a diferença básica entre sistema nervoso central e periférico?",
+                options: [
+                    "O central é cérebro e medula; o periférico são os nervos fora deles",
+                    "O central só existe em crianças",
+                    "O periférico controla apenas a digestão",
+                    "O central só serve para sentir dor"
+                ],
+                correct: 0,
+                explanation: "O sistema nervoso central inclui cérebro e medula; o periférico inclui nervos que conectam o corpo."
+            },
+            {
+                category: "Segurança do Paciente",
+                question: "Qual prática ajuda a prevenir complicações em pacientes com sonda?",
+                options: [
+                    "Ignorar a identificação do paciente",
+                    "Verificar fixação, posição e integridade da sonda",
+                    "Retirar a sonda sem orientação",
+                    "Apertar a sonda no pescoço"
+                ],
+                correct: 1,
+                explanation: "Verificar a fixação e a posição da sonda previne deslocamentos e desconforto."
+            },
+            {
+                category: "Segurança do Paciente",
+                question: "Qual medida reduz o risco de queda em pacientes hospitalizados?",
+                options: [
+                    "Manter a cama alta e sem gradil",
+                    "Manter a cama baixa e com gradil elevado",
+                    "Deixar objetos no chão",
+                    "Desligar a campainha"
+                ],
+                correct: 1,
+                explanation: "Cama baixa e gradil elevado ajudam a prevenir quedas."
+            }
+        ];
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        function loadQuestion() {
+            const container = document.getElementById('quizContainer');
+            const question = questions[currentQuestion];
+            const progressPercent = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+            let optionsHtml = '';
+            question.options.forEach((option, index) => {
+                optionsHtml += `\n                    <label class="option">\n                        <input type="radio" name="answer" value="${index}" onchange="enableNextButton()">\n                        ${option}\n                    </label>`;
+            });
+            container.innerHTML = `\n                <div class="question-container active">\n                    <div class="topic-category">${question.category}</div>\n                    <div class="question-number">Questão ${currentQuestion + 1} de ${questions.length}</div>\n                    <div class="question-text">${question.question}</div>\n                    <div class="options">\n                        ${optionsHtml}\n                    </div>\n                    <div class="feedback" id="feedback"></div>\n                </div>`;
+            answered = false;
+            document.getElementById('nextBtn').disabled = true;
+        }
+        function enableNextButton() {
+            document.getElementById('nextBtn').disabled = false;
+        }
+        function nextQuestion() {
+            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            if (!selectedAnswer) {
+                alert('Por favor, selecione uma resposta');
+                return;
+            }
+            if (!answered) {
+                checkAnswer(parseInt(selectedAnswer.value));
+            } else {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            const nextBtn = document.getElementById('nextBtn');
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+                option.style.pointerEvents = 'none';
+            });
+            if (selectedIndex === question.correct) {
+                score++;
+                feedback.textContent = '✓ Resposta Correta! ' + question.explanation;
+                feedback.className = 'feedback correct show';
+            } else {
+                feedback.textContent = '✗ Resposta Incorreta. ' + question.explanation;
+                feedback.className = 'feedback incorrect show';
+            }
+            answered = true;
+            nextBtn.disabled = false;
+        }
+        function showResults() {
+            document.getElementById('quizContainer').innerHTML = '';
+            document.getElementById('buttons').innerHTML = '';
+            const results = document.getElementById('results');
+            const percentage = Math.round((score / questions.length) * 100);
+            let resultMessage = '';
+            if (percentage === 100) {
+                resultMessage = '🌟 Perfeito! Você é um especialista!';
+            } else if (percentage >= 80) {
+                resultMessage = '🎉 Excelente desempenho!';
+            } else if (percentage >= 60) {
+                resultMessage = '👍 Bom trabalho! Continue estudando.';
+            } else if (percentage >= 40) {
+                resultMessage = '📚 Você pode melhorar! Revise os conteúdos.';
+            } else {
+                resultMessage = '💪 Continue praticando!';
+            }
+            document.getElementById('scoreDisplay').textContent = `${score}/${questions.length}`;
+            document.getElementById('scoreText').textContent = `${percentage}% - ${resultMessage}`;
+            results.classList.add('show');
+        }
+        loadQuestion();
+    </script>
+</body>
+</html>
